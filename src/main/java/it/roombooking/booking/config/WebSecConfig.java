@@ -17,6 +17,7 @@ public class WebSecConfig {
         http
             .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs
             .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Allow Swagger UI
                 .requestMatchers(HttpMethod.POST, "/api/utenti").authenticated() // Require auth only on POST /api/utenti
                 .anyRequest().permitAll() // Allow other requests
             );
