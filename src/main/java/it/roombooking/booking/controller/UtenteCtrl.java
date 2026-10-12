@@ -1,67 +1,54 @@
 package it.roombooking.booking.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import it.roombooking.booking.dto.UtenteDTO;
 import it.roombooking.booking.service.UtenteDAO;
-import it.roombooking.booking.model.Utente;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
-
+@RequestMapping("/api/utenti")
 public class UtenteCtrl {
 
     @Autowired
-    UtenteDAO utenteDAO;
+    private UtenteDAO utenteDAO;
 
-
-    /* SAVE Utente */
-    @PostMapping("/utente")
-    public Utente createUtente(@Valid @RequestBody Utente ut){
-        return utenteDAO.save(ut);
+    @PostMapping
+    public ResponseEntity<UtenteDTO> createUtente(@Valid @RequestBody UtenteDTO utenteDTO) {
+        return ResponseEntity.ok(utenteDAO.save(utenteDTO));
     }
 
-    /* GET All Utente */
-    @GetMapping("/utente")
-    public List<Utente> getAllUtente(){
-        return utenteDAO.findAll();
+    @GetMapping
+    public ResponseEntity<List<UtenteDTO>> getAllUtente() {
+        return ResponseEntity.ok(utenteDAO.findAll());
     }
 
-    /* GET One Utente*/
-    @GetMapping("/utente/{id}")
-    public  Utente getUtenteById(@PathVariable(value = "id") Long utId) {
-        return utenteDAO.findOne(utId);
-    }
-
-    /* Update Utente */
-    @PutMapping(value = "/utente/{id}")
-    public ResponseEntity<Utente> updateUtente(@PathVariable(value = "id") Long utId,@Valid @RequestBody Utente utDetails){
-        Utente ut= utenteDAO.findOne(utId);
-
-        if(ut == null){
+    @GetMapping("/{id}")
+    public ResponseEntity<UtenteDTO> getUtenteById(@PathVariable("id") Long id) {
+        UtenteDTO dto = utenteDAO.findOne(id);
+        if (dto == null) {
             return ResponseEntity.notFound().build();
         }
-        System.out.println(ut.getName());
-        ut.setEmail(utDetails.getEmail());
-        ut.setName(utDetails.getName());
-        ut.setPassword(utDetails.getPassword());
-        Utente updateUt=utenteDAO.save(ut);
-
-        return  ResponseEntity.ok().body(updateUt);
+        return ResponseEntity.ok(dto);
     }
 
-
-    @DeleteMapping("/utente/{id}")
-    public ResponseEntity<Utente> deleteUtente(@PathVariable(value="id") Long utId){
-        Utente ut=utenteDAO.findOne(utId);
-        if(ut == null){
+    @PutMapping("/{id}")
+    public ResponseEntity<UtenteDTO> updateUtente(@PathVariable("id") Long id, @Valid @RequestBody UtenteDTO utDetails) {
+        UtenteDTO updated = utenteDAO.update(id, utDetails);
+        if (updated == null) {
             return ResponseEntity.notFound().build();
         }
-        utenteDAO.Delete(ut);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUtente(@PathVariable("id") Long id) {
+        if (utenteDAO.delete(id)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

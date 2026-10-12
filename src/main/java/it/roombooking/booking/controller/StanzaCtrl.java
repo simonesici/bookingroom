@@ -1,56 +1,54 @@
 package it.roombooking.booking.controller;
 
-import it.roombooking.booking.model.Stanza;
+import it.roombooking.booking.dto.StanzaDTO;
 import it.roombooking.booking.service.StanzaDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/stanze")
 public class StanzaCtrl {
+
     @Autowired
-    StanzaDAO stanzaDAO;
+    private StanzaDAO stanzaDAO;
 
-    /* SAVE Room */
-    @PostMapping("/room")
-    public Stanza createRoom(@Valid @RequestBody Stanza room){
-        return stanzaDAO.save(room);
+    @PostMapping
+    public ResponseEntity<StanzaDTO> createRoom(@Valid @RequestBody StanzaDTO room) {
+        return ResponseEntity.ok(stanzaDAO.save(room));
     }
 
-    /* GET ALL ROOM */
-    @GetMapping("/room")
-    public List<Stanza> getAllRoom(){
-        return stanzaDAO.getAllRoom();
+    @GetMapping
+    public ResponseEntity<List<StanzaDTO>> getAllRoom() {
+        return ResponseEntity.ok(stanzaDAO.getAllRoom());
     }
 
-    /* GET ROOM by ID */
-    @GetMapping("/room/{id}")
-    public Stanza getByID(@PathVariable(value = "id") Long roomId){
-        return stanzaDAO.getById(roomId);
-    }
-
-    /* UPDATE Room  */
-    @PutMapping("/room/{id}")
-    public ResponseEntity<Stanza> UpdateRoom(@PathVariable(value="id") Long roomId,@Valid @RequestBody Stanza RoomDtl){
-        Stanza room=stanzaDAO.getById(roomId);
-        if(room == null){ return ResponseEntity.notFound().build();}
-        room.setNome(RoomDtl.getNome());
-        Stanza roomUp=stanzaDAO.save(room);
-        return ResponseEntity.ok().body(roomUp);
-    }
-
-    /* DELETE Room */
-    @DeleteMapping("/room/{id}")
-    public ResponseEntity<Stanza> deleteUtente(@PathVariable(value="id") Long roomId){
-        Stanza room = stanzaDAO.getById(roomId);
-        if (room == null) {
+    @GetMapping("/{id}")
+    public ResponseEntity<StanzaDTO> getByID(@PathVariable("id") Long id) {
+        StanzaDTO dto = stanzaDAO.getById(id);
+        if (dto == null) {
             return ResponseEntity.notFound().build();
         }
-        stanzaDAO.deleteRoom(room);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<StanzaDTO> updateRoom(@PathVariable("id") Long id, @Valid @RequestBody StanzaDTO roomDtl) {
+        StanzaDTO updated = stanzaDAO.update(id, roomDtl);
+        if (updated == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRoom(@PathVariable("id") Long id) {
+        if (stanzaDAO.deleteRoom(id)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
