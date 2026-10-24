@@ -1,43 +1,41 @@
 package it.roombooking.booking.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 public class Utente implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String Name;
+    private String name;
     private String email;
     private String password;
 
-    public Utente(){}
+    public Utente() {}
 
-    public Utente(Long id, String name, String email, String password){
-        this.id=id;
-        this.Name=name;
-        this.email=email;
-        this.password=password;
+    public Utente(Long id, String name, String email, String password) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
     }
 
-    public Long getId_User() {
+    public Long getId() {
         return id;
     }
 
-    public void setId_User(Long id_User) {
-        id = id_User;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
-        return Name;
+        return name;
     }
 
     public void setName(String name) {
-        Name = name;
+        this.name = name;
     }
 
     public String getEmail() {
@@ -55,5 +53,4 @@ public class Utente implements Serializable {
     public void setPassword(String password) {
         this.password = password;
     }
-
 }

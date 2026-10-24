@@ -1,87 +1,114 @@
 package it.roombooking.booking.service;
 
+import it.roombooking.booking.dto.PrenotazioneRequestDTO;
+import it.roombooking.booking.dto.PrenotazioneResponseDTO;
 import it.roombooking.booking.model.Prenotazione;
+import it.roombooking.booking.model.Stanza;
+import it.roombooking.booking.model.Utente;
 import it.roombooking.booking.repository.PrenotazioneRepo;
+import it.roombooking.booking.repository.StanzaRepo;
+import it.roombooking.booking.repository.UtenteRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PrenotazioneDAO {
 
     @Autowired
-    PrenotazioneRepo prenotazioneRepo;
+    private PrenotazioneRepo prenotazioneRepo;
 
-    /* Save prenotazione */
+    @Autowired
+    private UtenteRepo utenteRepo;
 
-    public Prenotazione save(Prenotazione pt){
-        return prenotazioneRepo.save(pt);
-    }
+    @Autowired
+    private StanzaRepo stanzaRepo;
 
-    /* Search prenotazione */
+    @Autowired
+    private UtenteDAO utenteDAO;
 
-    public List<Prenotazione> findAll(){
-        return prenotazioneRepo.findAll();
-    }
+    @Autowired
+    private StanzaDAO stanzaDAO;
 
-    /* Get prenotazione by Id */
-
-    public Prenotazione findOne(Long pt){
-        return prenotazioneRepo.getOne(pt);
-    }
-
-    /* Delete single prenotazione */
-
-    public void Delete(Prenotazione pt){
-        prenotazioneRepo.delete(pt);
-        return;
-    }
-
-    /* Get Prenotazione By month */
-    public List<Prenotazione> findByMonth(int i){
-
-        List<Prenotazione> pts= prenotazioneRepo.findAll();
-        List<Prenotazione> ptMonth= new ArrayList<>();
-        String patternMese = "MM";
-        DateFormat pM = new SimpleDateFormat(patternMese);
-        int j=0;
-
-        for(j=0;j<pts.size();j++){
-            if(Long.parseLong(pM.format(pts.get(j).getDataI())) == i)
-            {
-                ptMonth.add(pts.get(j));
-
-            }
+    public PrenotazioneResponseDTO save(PrenotazioneRequestDTO dto) {
+        if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), 0L)) {
+            throw new RuntimeException("La stanza è già occupata in questo periodo");
         }
-        for (j=0;j<ptMonth.size();j++)
-        {
-            System.out.println(" ptMo-->"+ptMonth.get(j).getData());
-        }
-        if(ptMonth == null)return null;
-        return ptMonth;
+
+        Utente utente = utenteRepo.findById(dto.getIdUtente())
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+        Stanza stanza = stanzaRepo.findById(dto.getIdStanza())
+                .orElseThrow(() -> new RuntimeException("Stanza non trovata"));
+
+        Prenotazione prenotazione = new Prenotazione();
+        prenotazione.setUtente(utente);
+        prenotazione.setStanza(stanza);
+        prenotazione.setDataI(dto.getDataI());
+        prenotazione.setDataF(dto.getDataF());
+
+        return mapToDTO(prenotazioneRepo.save(prenotazione));
     }
 
-/* Check data record for updating a new Room Booking */
-    public int checkUpRecord (Prenotazione ptDtl){
-        int flag=0;
-        int i=0;
-        List<Prenotazione> Pts= prenotazioneRepo.findAll();
-        for(Prenotazione pt : Pts) {
-            if(pt.getDataI()==null || ptDtl.getDataI()==null){return flag;}
-            if(ptDtl.getDataI().after(pt.getDataI()) && ptDtl.getDataI().before(pt.getDataF()) || ptDtl.getDataI().equals(pt.getDataI()) && ptDtl.getDataF().equals(pt.getDataF())){
-                flag=666;
-            }
-            if(ptDtl.getDataF().after(pt.getDataI()) && ptDtl.getDataF().before(pt.getDataF()) || ptDtl.getDataI().equals(pt.getDataI()) && ptDtl.getDataF().equals(pt.getDataF())){
-                flag=666;
-            }
+    public List<PrenotazioneResponseDTO> findAll() {
+        return prenotazioneRepo.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public PrenotazioneResponseDTO findOne(Long id) {
+        return prenotazioneRepo.findById(id).map(this::mapToDTO).orElse(null);
+    }
+
+    public PrenotazioneResponseDTO update(Long id, PrenotazioneRequestDTO dto) {
+        if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), id)) {
+            throw new RuntimeException("La stanza è già occupata in questo periodo");
         }
-        if(flag!=666)flag=111;
-        return  flag;
+
+        return prenotazioneRepo.findById(id).map(prenotazione -> {
+            Utente utente = utenteRepo.findById(dto.getIdUtente())
+                    .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+            Stanza stanza = stanzaRepo.findById(dto.getIdStanza())
+                    .orElseThrow(() -> new RuntimeException("Stanza non trovata"));
+
+            prenotazione.setUtente(utente);
+            prenotazione.setStanza(stanza);
+            prenotazione.setDataI(dto.getDataI());
+            prenotazione.setDataF(dto.getDataF());
+            return mapToDTO(prenotazioneRepo.save(prenotazione));
+        }).orElse(null);
+    }
+
+    public boolean delete(Long id) {
+        if (prenotazioneRepo.existsById(id)) {
+            prenotazioneRepo.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public List<PrenotazioneResponseDTO> findByMonth(int mese) {
+        return prenotazioneRepo.findByMonth(mese).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private PrenotazioneResponseDTO mapToDTO(Prenotazione prenotazione) {
+        PrenotazioneResponseDTO dto = new PrenotazioneResponseDTO();
+        dto.setId(prenotazione.getId());
+        dto.setDataCreation(prenotazione.getDataCreation());
+        dto.setDataI(prenotazione.getDataI());
+        dto.setDataF(prenotazione.getDataF());
+
+        if (prenotazione.getUtente() != null) {
+            dto.setUtente(utenteDAO.mapToDTO(prenotazione.getUtente()));
+        }
+
+        if (prenotazione.getStanza() != null) {
+            dto.setStanza(stanzaDAO.mapToDTO(prenotazione.getStanza()));
+        }
+
+        return dto;
     }
 }

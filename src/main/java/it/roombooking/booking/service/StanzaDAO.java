@@ -1,35 +1,55 @@
 package it.roombooking.booking.service;
 
+import it.roombooking.booking.dto.StanzaDTO;
 import it.roombooking.booking.model.Stanza;
 import it.roombooking.booking.repository.StanzaRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StanzaDAO {
+
     @Autowired
-    StanzaRepo stanzaRepo;
+    private StanzaRepo stanzaRepo;
 
-    /* Save Stanza */
-    public Stanza save(Stanza room){
-        return stanzaRepo.save(room);
+    public StanzaDTO save(StanzaDTO dto) {
+        Stanza room = new Stanza();
+        room.setNome(dto.getNome());
+        return mapToDTO(stanzaRepo.save(room));
     }
 
-    /* search Room */
-    //ALL ROOMS
-    public List<Stanza> getAllRoom(){
-        return stanzaRepo.findAll();
-    }
-    //ROOM by ID
-    public Stanza getById(Long rID){
-        return stanzaRepo.getOne(rID);
+    public List<StanzaDTO> getAllRoom() {
+        return stanzaRepo.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
-    /* DELETE room */
-    public void deleteRoom(Stanza room){
-        stanzaRepo.delete(room);
-        return;
+    public StanzaDTO getById(Long id) {
+        return stanzaRepo.findById(id).map(this::mapToDTO).orElse(null);
+    }
+
+    public StanzaDTO update(Long id, StanzaDTO dto) {
+        return stanzaRepo.findById(id).map(room -> {
+            room.setNome(dto.getNome());
+            return mapToDTO(stanzaRepo.save(room));
+        }).orElse(null);
+    }
+
+    public boolean deleteRoom(Long id) {
+        if (stanzaRepo.existsById(id)) {
+            stanzaRepo.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public StanzaDTO mapToDTO(Stanza stanza) {
+        StanzaDTO dto = new StanzaDTO();
+        dto.setId(stanza.getId());
+        dto.setNome(stanza.getNome());
+        return dto;
     }
 }
