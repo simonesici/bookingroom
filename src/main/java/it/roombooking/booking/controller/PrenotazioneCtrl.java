@@ -65,4 +65,14 @@ public class PrenotazioneCtrl {
             @PathVariable("mese") int mese) {
         return ResponseEntity.ok(prenotazioneDAO.findByYearAndMonth(anno, mese));
     }
+
+    @GetMapping("/stanza/{stanzaId}")
+    public ResponseEntity<List<PrenotazioneResponseDTO>> getBookingsByStanza(@PathVariable("stanzaId") Long stanzaId) {
+        return ResponseEntity.ok(prenotazioneDAO.findByStanza(stanzaId));
+    }
+
+    @GetMapping("/utente/{utenteId}")
+    public ResponseEntity<List<PrenotazioneResponseDTO>> getBookingsByUtente(@PathVariable("utenteId") Long utenteId) {
+        return ResponseEntity.ok(prenotazioneDAO.findByUtente(utenteId));
+    }
 }

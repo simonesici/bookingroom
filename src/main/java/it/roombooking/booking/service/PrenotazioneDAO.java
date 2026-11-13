@@ -118,6 +118,26 @@ public class PrenotazioneDAO {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<PrenotazioneResponseDTO> findByStanza(Long stanzaId) {
+        if (!stanzaRepo.existsById(stanzaId)) {
+            throw new ResourceNotFoundException("Stanza non trovata");
+        }
+        return prenotazioneRepo.findByStanzaIdOrderByDataIAsc(stanzaId).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PrenotazioneResponseDTO> findByUtente(Long utenteId) {
+        if (!utenteRepo.existsById(utenteId)) {
+            throw new ResourceNotFoundException("Utente non trovato");
+        }
+        return prenotazioneRepo.findByUtenteIdOrderByDataIAsc(utenteId).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private void validateDates(LocalDateTime dataI, LocalDateTime dataF) {
         if (dataI == null || dataF == null || !dataI.isBefore(dataF)) {
             throw new BadRequestException("La data di inizio deve essere antecedente alla data di fine");

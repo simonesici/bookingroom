@@ -15,6 +15,7 @@ Applicazione backend REST per la gestione di prenotazioni di stanze/sale riunion
 - **ORM**: Spring Data JPA / Hibernate (`ddl-auto=update` in dev, `create-drop` in test)
 - **Sicurezza**: Spring Security (HTTP Basic + `BCryptPasswordEncoder`)
 - **Documentazione API**: SpringDoc OpenAPI `2.5.0` (`/swagger-ui/index.html`, `/v3/api-docs`)
+- **Containerizzazione**: `Dockerfile` multi-stage (Java 21) e `docker-compose.yml` (PostgreSQL 16 + App).
 - **Timezone**: `Europe/Rome` impostata di default all'avvio in `BookingApplication`.
 
 ---
@@ -31,31 +32,31 @@ Package base: `it.roombooking.booking` (`src/main/java/it/roombooking/booking/`)
   - Bean `PasswordEncoder` (`BCryptPasswordEncoder`) e `UserDetailsService` (`InMemoryUserDetailsManager`).
 - **`model/`**:
   - `Utente`: `id`, `name`, `email` (`unique = true`), `password` (hash BCrypt).
-  - `Stanza`: `id`, `nome` (`unique = true`).
+  - `Stanza`: `id`, `nome` (`unique = true`), `capienza` (`Integer`), `descrizione` (`String`).
   - `Prenotazione`: `id`, `dataCreation` (`@CreationTimestamp`), `utente` (`@ManyToOne(LAZY)`), `stanza` (`@ManyToOne(LAZY)`), `dataI` (`LocalDateTime`), `dataF` (`LocalDateTime`).
 - **`exception/`**:
   - `ResourceNotFoundException` (`404 Not Found`), `ResourceConflictException` (`409 Conflict`), `BadRequestException` (`400 Bad Request`).
   - `GlobalExceptionHandler` (`@RestControllerAdvice`): mappa centralmente le eccezioni di dominio, i vincoli DB (`DataIntegrityViolationException`) e gli errori di validazione (`MethodArgumentNotValidException`) in risposte JSON strutturate.
 - **`dto/`**:
   - `UtenteDTO`: validazione `@NotBlank` / `@Email`; campo `password` annotato con `@JsonProperty(access = WRITE_ONLY)` per non esporlo mai nelle risposte JSON.
-  - `StanzaDTO`: `id`, `nome` (`@NotBlank`).
+  - `StanzaDTO`: `id`, `nome` (`@NotBlank`), `capienza` (`@Min(1)`), `descrizione`.
   - `PrenotazioneRequestDTO`: `idUtente`, `idStanza`, `dataI`, `dataF` (tutti `@NotNull`).
   - `PrenotazioneResponseDTO`: `id`, `dataCreation`, `UtenteDTO`, `StanzaDTO`, `dataI`, `dataF`.
 - **`repository/`**:
   - `UtenteRepo`: include check `existsByEmailIgnoreCase` / `existsByEmailIgnoreCaseAndIdNot`.
-  - `StanzaRepo`: include check `existsByNomeIgnoreCase` / `existsByNomeIgnoreCaseAndIdNot`.
+  - `StanzaRepo`: include check di unicità sul nome, filtro per capienza (`findByCapienzaGreaterThanEqualOrderByCapienzaAsc`) e ricerca stanze libere in un intervallo temporale (`findAvailableRooms`).
   - `PrenotazioneRepo`:
-    - `findAll()`, `findById(Long id)`, `findByMonth(int month)`, `findByYearAndMonth(int year, int month)` con `@EntityGraph(attributePaths = {"utente", "stanza"})` per evitare query N+1 e `LazyInitializationException`.
+    - `findAll()`, `findById(Long id)`, `findByMonth(int month)`, `findByYearAndMonth(int year, int month)`, `findByStanzaIdOrderByDataIAsc(Long stanzaId)`, `findByUtenteIdOrderByDataIAsc(Long utenteId)` con `@EntityGraph(attributePaths = {"utente", "stanza"})`.
     - `isStanzaOccupied(stanzaId, startDate, endDate, excludeId)`: verifica sovrapposizioni con `p.dataI < :endDate AND p.dataF > :startDate` (consente prenotazioni adiacenti, es. `09:00-10:00` e `10:00-11:00`).
 - **`service/`** (`UtenteDAO`, `StanzaDAO`, `PrenotazioneDAO`):
   - Tutti i metodi di scrittura sono `@Transactional`, quelli di lettura `@Transactional(readOnly = true)`.
   - `UtenteDAO`: verifica unicità email (`ResourceConflictException`) ed effettua l'hashing della password con `PasswordEncoder` in `save` e `update`.
-  - `StanzaDAO`: verifica unicità nome stanza (`ResourceConflictException`) in `save` e `update`.
-  - `PrenotazioneDAO`: valida che `dataI` sia strettamente antecedente a `dataF` (`BadRequestException`), verifica l'esistenza di utente/stanza (`ResourceNotFoundException`) e che la stanza sia libera (`ResourceConflictException`).
+  - `StanzaDAO`: verifica unicità nome stanza (`ResourceConflictException`), gestisce capienza/descrizione, filtro per capienza minima e ricerca stanze disponibili (`findAvailableRooms`).
+  - `PrenotazioneDAO`: valida che `dataI` sia strettamente antecedente a `dataF` (`BadRequestException`), verifica l'esistenza di utente/stanza (`ResourceNotFoundException`), che la stanza sia libera (`ResourceConflictException`) e filtra per mese, anno/mese, stanza o utente.
 - **`controller/`**:
   - `UtenteCtrl` (`/api/utenti`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
-  - `StanzaCtrl` (`/api/stanze`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
-  - `PrenotazioneCtrl` (`/api/prenotazioni`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `GET /timeline/{mese}`, `GET /timeline/{anno}/{mese}`.
+  - `StanzaCtrl` (`/api/stanze`): `POST`, `GET` (con `?capienzaMinima=`), `GET /disponibili` (`?dataI=&dataF=&capienzaMinima=`), `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
+  - `PrenotazioneCtrl` (`/api/prenotazioni`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `GET /timeline/{mese}`, `GET /timeline/{anno}/{mese}`, `GET /stanza/{stanzaId}`, `GET /utente/{utenteId}`.
 
 ---
 

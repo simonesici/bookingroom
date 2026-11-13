@@ -207,4 +207,69 @@ public class BookingApplicationTests {
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.status").value(400));
 	}
+
+	@Test
+	public void testRoomMetadataAvailabilityAndBookingFilters() throws Exception {
+		UtenteDTO u = new UtenteDTO();
+		u.setName("Giulia");
+		u.setEmail("giulia@example.com");
+		u.setPassword("pass123");
+		u = utenteDAO.save(u);
+
+		// Create 2 rooms with different capacities
+		StanzaDTO smallRoom = new StanzaDTO();
+		smallRoom.setNome("Saletta Focus");
+		smallRoom.setCapienza(4);
+		smallRoom.setDescrizione("Monitor 4K");
+		smallRoom = stanzaDAO.save(smallRoom);
+
+		StanzaDTO largeRoom = new StanzaDTO();
+		largeRoom.setNome("Sala Board");
+		largeRoom.setCapienza(20);
+		largeRoom.setDescrizione("Proiettore, Lavagna, Videoconferenza");
+		largeRoom = stanzaDAO.save(largeRoom);
+
+		// Book smallRoom from 14:00 to 15:00 on 2026-07-20
+		PrenotazioneRequestDTO booking = new PrenotazioneRequestDTO();
+		booking.setIdUtente(u.getId());
+		booking.setIdStanza(smallRoom.getId());
+		booking.setDataI(LocalDateTime.of(2026, 7, 20, 14, 0));
+		booking.setDataF(LocalDateTime.of(2026, 7, 20, 15, 0));
+		prenotazioneDAO.save(booking);
+
+		// Filter rooms by minimum capacity >= 15 -> should include Sala Board
+		mockMvc.perform(get("/api/stanze").param("capienzaMinima", "15"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].nome").value("Sala Board"))
+				.andExpect(jsonPath("$[0].capienza").value(20))
+				.andExpect(jsonPath("$[0].descrizione").value("Proiettore, Lavagna, Videoconferenza"));
+
+		// Check available rooms during 14:00-15:00 with capienzaMinima=4 -> Saletta Focus is occupied, Sala Board is free
+		mockMvc.perform(get("/api/stanze/disponibili")
+				.param("dataI", "2026-07-20T14:00:00")
+				.param("dataF", "2026-07-20T15:00:00")
+				.param("capienzaMinima", "4"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].nome").value("Sala Board"));
+
+		// Check available rooms during 15:00-16:00 with capienzaMinima=4 -> both rooms are free
+		mockMvc.perform(get("/api/stanze/disponibili")
+				.param("dataI", "2026-07-20T15:00:00")
+				.param("dataF", "2026-07-20T16:00:00")
+				.param("capienzaMinima", "4"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(2));
+
+		// Filter bookings by stanza and by utente
+		mockMvc.perform(get("/api/prenotazioni/stanza/" + smallRoom.getId()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].stanza.nome").value("Saletta Focus"));
+
+		mockMvc.perform(get("/api/prenotazioni/utente/" + u.getId()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].utente.email").value("giulia@example.com"));
+	}
 }

@@ -28,6 +28,12 @@ public interface PrenotazioneRepo extends JpaRepository<Prenotazione, Long> {
     @Query("SELECT p FROM Prenotazione p WHERE EXTRACT(YEAR FROM p.dataI) = :year AND EXTRACT(MONTH FROM p.dataI) = :month ORDER BY p.dataI ASC")
     List<Prenotazione> findByYearAndMonth(@Param("year") int year, @Param("month") int month);
 
+    @EntityGraph(attributePaths = {"utente", "stanza"})
+    List<Prenotazione> findByStanzaIdOrderByDataIAsc(Long stanzaId);
+
+    @EntityGraph(attributePaths = {"utente", "stanza"})
+    List<Prenotazione> findByUtenteIdOrderByDataIAsc(Long utenteId);
+
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
            "FROM Prenotazione p WHERE p.stanza.id = :stanzaId " +
            "AND p.id != :excludeId " + // Useful for updates

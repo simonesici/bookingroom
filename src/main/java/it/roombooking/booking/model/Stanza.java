@@ -12,11 +12,22 @@ public class Stanza implements Serializable {
     @Column(nullable = false, unique = true)
     private String nome;
 
+    private Integer capienza;
+
+    private String descrizione;
+
     public Stanza() {}
 
     public Stanza(Long id, String nome) {
         this.id = id;
         this.nome = nome;
+    }
+
+    public Stanza(Long id, String nome, Integer capienza, String descrizione) {
+        this.id = id;
+        this.nome = nome;
+        this.capienza = capienza;
+        this.descrizione = descrizione;
     }
 
     public Long getId() {
@@ -33,5 +44,21 @@ public class Stanza implements Serializable {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public Integer getCapienza() {
+        return capienza;
+    }
+
+    public void setCapienza(Integer capienza) {
+        this.capienza = capienza;
+    }
+
+    public String getDescrizione() {
+        return descrizione;
+    }
+
+    public void setDescrizione(String descrizione) {
+        this.descrizione = descrizione;
     }
 }

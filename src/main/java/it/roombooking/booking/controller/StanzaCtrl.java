@@ -3,10 +3,12 @@ package it.roombooking.booking.controller;
 import it.roombooking.booking.dto.StanzaDTO;
 import it.roombooking.booking.service.StanzaDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -22,8 +24,17 @@ public class StanzaCtrl {
     }
 
     @GetMapping
-    public ResponseEntity<List<StanzaDTO>> getAllRoom() {
-        return ResponseEntity.ok(stanzaDAO.getAllRoom());
+    public ResponseEntity<List<StanzaDTO>> getAllRoom(
+            @RequestParam(value = "capienzaMinima", required = false) Integer capienzaMinima) {
+        return ResponseEntity.ok(stanzaDAO.getAllRoom(capienzaMinima));
+    }
+
+    @GetMapping("/disponibili")
+    public ResponseEntity<List<StanzaDTO>> getAvailableRooms(
+            @RequestParam("dataI") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataI,
+            @RequestParam("dataF") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataF,
+            @RequestParam(value = "capienzaMinima", required = false) Integer capienzaMinima) {
+        return ResponseEntity.ok(stanzaDAO.findAvailableRooms(dataI, dataF, capienzaMinima));
     }
 
     @GetMapping("/{id}")
