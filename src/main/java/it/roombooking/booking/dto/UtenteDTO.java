@@ -1,5 +1,6 @@
 package it.roombooking.booking.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -14,6 +15,7 @@ public class UtenteDTO {
     private String email;
 
     @NotBlank(message = "La password non può essere vuota")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     // Getters and Setters

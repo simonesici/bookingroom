@@ -4,7 +4,9 @@ import it.roombooking.booking.dto.UtenteDTO;
 import it.roombooking.booking.model.Utente;
 import it.roombooking.booking.repository.UtenteRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,35 +17,43 @@ public class UtenteDAO {
     @Autowired
     private UtenteRepo utenteRepo;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Transactional
     public UtenteDTO save(UtenteDTO utenteDTO) {
         Utente utente = new Utente();
         utente.setName(utenteDTO.getName());
         utente.setEmail(utenteDTO.getEmail());
-        utente.setPassword(utenteDTO.getPassword());
+        utente.setPassword(passwordEncoder.encode(utenteDTO.getPassword()));
 
         Utente saved = utenteRepo.save(utente);
         return mapToDTO(saved);
     }
 
+    @Transactional(readOnly = true)
     public List<UtenteDTO> findAll() {
         return utenteRepo.findAll().stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public UtenteDTO findOne(Long id) {
         return utenteRepo.findById(id).map(this::mapToDTO).orElse(null);
     }
 
+    @Transactional
     public UtenteDTO update(Long id, UtenteDTO utenteDTO) {
         return utenteRepo.findById(id).map(utente -> {
             utente.setName(utenteDTO.getName());
             utente.setEmail(utenteDTO.getEmail());
-            utente.setPassword(utenteDTO.getPassword());
+            utente.setPassword(passwordEncoder.encode(utenteDTO.getPassword()));
             return mapToDTO(utenteRepo.save(utente));
         }).orElse(null);
     }
 
+    @Transactional
     public boolean delete(Long id) {
         if (utenteRepo.existsById(id)) {
             utenteRepo.deleteById(id);
@@ -57,7 +67,6 @@ public class UtenteDAO {
         dto.setId(utente.getId());
         dto.setName(utente.getName());
         dto.setEmail(utente.getEmail());
-        dto.setPassword(utente.getPassword());
         return dto;
     }
 }

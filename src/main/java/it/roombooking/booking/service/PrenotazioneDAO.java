@@ -10,7 +10,9 @@ import it.roombooking.booking.repository.StanzaRepo;
 import it.roombooking.booking.repository.UtenteRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +34,10 @@ public class PrenotazioneDAO {
     @Autowired
     private StanzaDAO stanzaDAO;
 
+    @Transactional
     public PrenotazioneResponseDTO save(PrenotazioneRequestDTO dto) {
+        validateDates(dto.getDataI(), dto.getDataF());
+
         if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), 0L)) {
             throw new RuntimeException("La stanza è già occupata in questo periodo");
         }
@@ -51,17 +56,22 @@ public class PrenotazioneDAO {
         return mapToDTO(prenotazioneRepo.save(prenotazione));
     }
 
+    @Transactional(readOnly = true)
     public List<PrenotazioneResponseDTO> findAll() {
         return prenotazioneRepo.findAll().stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public PrenotazioneResponseDTO findOne(Long id) {
         return prenotazioneRepo.findById(id).map(this::mapToDTO).orElse(null);
     }
 
+    @Transactional
     public PrenotazioneResponseDTO update(Long id, PrenotazioneRequestDTO dto) {
+        validateDates(dto.getDataI(), dto.getDataF());
+
         if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), id)) {
             throw new RuntimeException("La stanza è già occupata in questo periodo");
         }
@@ -80,6 +90,7 @@ public class PrenotazioneDAO {
         }).orElse(null);
     }
 
+    @Transactional
     public boolean delete(Long id) {
         if (prenotazioneRepo.existsById(id)) {
             prenotazioneRepo.deleteById(id);
@@ -88,10 +99,17 @@ public class PrenotazioneDAO {
         return false;
     }
 
+    @Transactional(readOnly = true)
     public List<PrenotazioneResponseDTO> findByMonth(int mese) {
         return prenotazioneRepo.findByMonth(mese).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    private void validateDates(LocalDateTime dataI, LocalDateTime dataF) {
+        if (dataI == null || dataF == null || !dataI.isBefore(dataF)) {
+            throw new RuntimeException("La data di inizio deve essere antecedente alla data di fine");
+        }
     }
 
     private PrenotazioneResponseDTO mapToDTO(Prenotazione prenotazione) {
