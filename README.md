@@ -6,7 +6,9 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-Backend RESTful sviluppato con **Spring Boot 3** e **Java 21** per la gestione completa di sale riunioni, disponibilità orarie, utenti e prenotazioni aziendali.
+Backend RESTful sviluppato con **Spring Boot 3** e **Java 21** per la gestione completa di sale riunioni, disponibilità orarie, utenti e prenotazioni aziendali, progettato per lavorare in sinergia con la Single Page Application **[BookingRoom Frontend (`bookingRoomFE`)](https://github.com/simonesici/bookingRoomFE)** in **React + Vite + Bootstrap 5**.
+
+![BookingRoom Dashboard Mockup](docs/mockup.svg)
 
 ---
 
@@ -23,7 +25,7 @@ Backend RESTful sviluppato con **Spring Boot 3** e **Java 21** per la gestione c
 - **Sicurezza Stateless & JWT**:
   - Autenticazione **JWT Bearer (`HS256`)** e **HTTP Basic** su database (`CustomUserDetailsService`) con fallback sull'utente amministratore di bootstrap.
   - Password cifrate con **BCrypt** (`BCryptPasswordEncoder`) e mai esposte nelle risposte JSON (`WRITE_ONLY`).
-  - Supporto ai ruoli utente (`USER`, `ADMIN`).
+  - Supporto ai ruoli utente (`USER`, `ADMIN`) e **CORS** preconfigurato per il frontend React + Vite (`http://localhost:5173`).
 - **Qualità Architetturale**:
   - Architettura pulita basata su **DTO** e **Bean Validation** (`jakarta.validation`).
   - Prevenzione del problema *N+1* tramite `@EntityGraph` sui repository JPA.

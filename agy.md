@@ -28,6 +28,7 @@ Package base: `it.roombooking.booking` (`src/main/java/it/roombooking/booking/`)
 - **`BookingApplication.java`**: Entry point Spring Boot con `@EnableJpaAuditing` e timezone `Europe/Rome`.
 - **`config/`**:
   - `WebSecConfig.java`: Configurazione Spring Security Stateless:
+    - CORS abilitato per il frontend (`http://localhost:*`, `http://127.0.0.1:*`).
     - CSRF disabilitato e sessioni `STATELESS`.
     - Pubblici (`permitAll()`): Swagger UI, `POST /api/auth/login`, `GET /api/stanze/**`, `GET /api/prenotazioni/**`.
     - Protetti (`authenticated()`): tutte le operazioni di scrittura (`POST`, `PUT`, `DELETE`), `GET /api/utenti/**` e `GET /api/auth/me`.

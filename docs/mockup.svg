@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 620" width="100%" height="100%">
+  <defs>
+    <linearGradient id="navGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0d6efd" />
+      <stop offset="100%" stop-color="#0a58ca" />
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <filter id="windowShadow" x="-3%" y="-3%" width="106%" height="108%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.16" />
+    </filter>
+  </defs>
+
+  <!-- Outer background -->
+  <rect width="1100" height="620" rx="16" fill="#e9ecef" />
+
+  <!-- Browser Window -->
+  <g filter="url(#windowShadow)">
+    <rect x="24" y="20" width="1052" height="580" rx="12" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1.5" />
+    <!-- Browser Top Bar -->
+    <rect x="24" y="20" width="1052" height="40" rx="12" fill="#212529" />
+    <rect x="24" y="48" width="1052" height="12" fill="#212529" />
+    <circle cx="48" cy="40" r="6" fill="#ff5f56" />
+    <circle cx="68" cy="40" r="6" fill="#ffbd2e" />
+    <circle cx="88" cy="40" r="6" fill="#27c93f" />
+    <!-- URL Bar -->
+    <rect x="310" y="29" width="480" height="22" rx="6" fill="#343a40" />
+    <text x="550" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#adb5bd" text-anchor="middle">
+      🔒 http://localhost:5173 — BookingRoom Dashboard (React + Bootstrap 5 + Spring Boot 3)
+    </text>
+  </g>
+
+  <!-- Bootstrap Navbar -->
+  <rect x="24" y="60" width="1052" height="56" fill="url(#navGrad)" />
+  <text x="64" y="94" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#ffffff">
+    📅 BookingRoom
+  </text>
+
+  <!-- JWT User Badge & Logout -->
+  <rect x="780" y="74" width="185" height="28" rx="6" fill="#ffffff" />
+  <text x="872" y="92" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#0d6efd" text-anchor="middle">
+    👤 Marco Rossi (USER) • JWT
+  </text>
+  <rect x="975" y="74" width="65" height="28" rx="6" fill="none" stroke="#ffffff" stroke-width="1.2" />
+  <text x="1007" y="92" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">
+    Esci
+  </text>
+
+  <!-- Navigation Pills Bar -->
+  <g filter="url(#shadow)">
+    <rect x="64" y="134" width="972" height="50" rx="8" fill="#ffffff" />
+    <!-- Active Tab -->
+    <rect x="74" y="141" width="165" height="36" rx="6" fill="#0d6efd" />
+    <text x="156" y="164" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">
+      🔍 Trova &amp; Prenota
+    </text>
+    <!-- Inactive Tabs -->
+    <text x="335" y="164" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#0d6efd" text-anchor="middle">
+      🕒 Timeline Prenotazioni
+    </text>
+    <text x="515" y="164" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#0d6efd" text-anchor="middle">
+      🚪 Sale Riunioni (3)
+    </text>
+    <text x="655" y="164" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#0d6efd" text-anchor="middle">
+      👥 Utenti
+    </text>
+  </g>
+
+  <!-- Search Filter Card -->
+  <g filter="url(#shadow)">
+    <rect x="64" y="200" width="972" height="125" rx="10" fill="#ffffff" />
+    <text x="86" y="228" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#212529">
+      ⚡ Cerca Sale Libere per Fascia Oraria (GET /api/stanze/disponibili)
+    </text>
+
+    <!-- Data input -->
+    <text x="86" y="254" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#495057">Data</text>
+    <rect x="86" y="262" width="190" height="36" rx="6" fill="#ffffff" stroke="#ced4da" />
+    <text x="100" y="285" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#212529">2026-11-15</text>
+
+    <!-- Ora Inizio -->
+    <text x="294" y="254" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#495057">Ora Inizio</text>
+    <rect x="294" y="262" width="140" height="36" rx="6" fill="#ffffff" stroke="#ced4da" />
+    <text x="308" y="285" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#212529">09:00</text>
+
+    <!-- Ora Fine -->
+    <text x="452" y="254" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#495057">Ora Fine</text>
+    <rect x="452" y="262" width="140" height="36" rx="6" fill="#ffffff" stroke="#ced4da" />
+    <text x="466" y="285" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#212529">10:30</text>
+
+    <!-- Capienza Min -->
+    <text x="610" y="254" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#495057">Capienza Min.</text>
+    <rect x="610" y="262" width="140" height="36" rx="6" fill="#ffffff" stroke="#ced4da" />
+    <text x="624" y="285" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#212529">6 posti</text>
+
+    <!-- Search Button -->
+    <rect x="770" y="262" width="242" height="36" rx="6" fill="#0d6efd" />
+    <text x="891" y="285" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">
+      🔍 Verifica Disponibilità
+    </text>
+  </g>
+
+  <!-- Room Card 1 -->
+  <g filter="url(#shadow)">
+    <rect x="64" y="345" width="310" height="190" rx="10" fill="#ffffff" />
+    <text x="84" y="376" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#212529">
+      Sala Leonardo
+    </text>
+    <rect x="296" y="359" width="58" height="22" rx="5" fill="#198754" />
+    <text x="325" y="374" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">
+      Libera
+    </text>
+    <text x="84" y="405" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6c757d">
+      👥 Capienza: <tspan font-weight="700" fill="#212529">12 posti</tspan>
+    </text>
+    <text x="84" y="432" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6c757d">
+      🖥️ Proiettore 4K, Lavagna, Webcam
+    </text>
+    <rect x="84" y="480" width="270" height="34" rx="6" fill="none" stroke="#0d6efd" stroke-width="1.5" />
+    <text x="219" y="502" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#0d6efd" text-anchor="middle">
+      ➕ Prenota (09:00–10:30)
+    </text>
+  </g>
+
+  <!-- Room Card 2 -->
+  <g filter="url(#shadow)">
+    <rect x="395" y="345" width="310" height="190" rx="10" fill="#ffffff" />
+    <text x="415" y="376" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#212529">
+      Sala Plenaria Board
+    </text>
+    <rect x="627" y="359" width="58" height="22" rx="5" fill="#198754" />
+    <text x="656" y="374" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">
+      Libera
+    </text>
+    <text x="415" y="405" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6c757d">
+      👥 Capienza: <tspan font-weight="700" fill="#212529">24 posti</tspan>
+    </text>
+    <text x="415" y="432" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6c757d">
+      🖥️ Dual Screen 75", Audio Dolby, Fibra
+    </text>
+    <rect x="415" y="480" width="270" height="34" rx="6" fill="#0d6efd" />
+    <text x="550" y="502" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#ffffff" text-anchor="middle">
+      ➕ Prenota (09:00–10:30)
+    </text>
+  </g>
+
+  <!-- Room Card 3 -->
+  <g filter="url(#shadow)">
+    <rect x="726" y="345" width="310" height="190" rx="10" fill="#ffffff" />
+    <text x="746" y="376" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#212529">
+      Sala Innovation Lab
+    </text>
+    <rect x="958" y="359" width="58" height="22" rx="5" fill="#198754" />
+    <text x="987" y="374" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">
+      Libera
+    </text>
+    <text x="746" y="405" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6c757d">
+      👥 Capienza: <tspan font-weight="700" fill="#212529">8 posti</tspan>
+    </text>
+    <text x="746" y="432" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6c757d">
+      🖥️ Lavagna Digitale, TV 55"
+    </text>
+    <rect x="746" y="480" width="270" height="34" rx="6" fill="none" stroke="#0d6efd" stroke-width="1.5" />
+    <text x="881" y="502" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" fill="#0d6efd" text-anchor="middle">
+      ➕ Prenota (09:00–10:30)
+    </text>
+  </g>
+
+  <!-- Footer Status Bar -->
+  <rect x="64" y="552" width="972" height="32" rx="6" fill="#d1e7dd" stroke="#badbcc" />
+  <text x="550" y="573" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#0f5132" text-anchor="middle">
+    ✅ Connesso a Spring Boot API (http://localhost:8080) • PostgreSQL 16 • Autenticazione JWT Bearer Attiva
+  </text>
+</svg>
