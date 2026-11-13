@@ -18,13 +18,9 @@ public class PrenotazioneCtrl {
     private PrenotazioneDAO prenotazioneDAO;
 
     @PostMapping
-    public ResponseEntity<?> createBooking(@Valid @RequestBody PrenotazioneRequestDTO request) {
-        try {
-            PrenotazioneResponseDTO response = prenotazioneDAO.save(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<PrenotazioneResponseDTO> createBooking(@Valid @RequestBody PrenotazioneRequestDTO request) {
+        PrenotazioneResponseDTO response = prenotazioneDAO.save(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
@@ -42,16 +38,12 @@ public class PrenotazioneCtrl {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateBooking(@PathVariable("id") Long id, @Valid @RequestBody PrenotazioneRequestDTO request) {
-        try {
-            PrenotazioneResponseDTO updated = prenotazioneDAO.update(id, request);
-            if (updated == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    public ResponseEntity<PrenotazioneResponseDTO> updateBooking(@PathVariable("id") Long id, @Valid @RequestBody PrenotazioneRequestDTO request) {
+        PrenotazioneResponseDTO updated = prenotazioneDAO.update(id, request);
+        if (updated == null) {
+            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
@@ -65,5 +57,12 @@ public class PrenotazioneCtrl {
     @GetMapping("/timeline/{mese}")
     public ResponseEntity<List<PrenotazioneResponseDTO>> getTimelineByMonth(@PathVariable("mese") int mese) {
         return ResponseEntity.ok(prenotazioneDAO.findByMonth(mese));
+    }
+
+    @GetMapping("/timeline/{anno}/{mese}")
+    public ResponseEntity<List<PrenotazioneResponseDTO>> getTimelineByYearAndMonth(
+            @PathVariable("anno") int anno,
+            @PathVariable("mese") int mese) {
+        return ResponseEntity.ok(prenotazioneDAO.findByYearAndMonth(anno, mese));
     }
 }

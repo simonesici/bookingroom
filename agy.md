@@ -30,27 +30,32 @@ Package base: `it.roombooking.booking` (`src/main/java/it/roombooking/booking/`)
   - Tutti gli altri endpoint attualmente pubblici (`permitAll()`).
   - Bean `PasswordEncoder` (`BCryptPasswordEncoder`) e `UserDetailsService` (`InMemoryUserDetailsManager`).
 - **`model/`**:
-  - `Utente`: `id`, `name`, `email`, `password` (hash BCrypt).
-  - `Stanza`: `id`, `nome`.
+  - `Utente`: `id`, `name`, `email` (`unique = true`), `password` (hash BCrypt).
+  - `Stanza`: `id`, `nome` (`unique = true`).
   - `Prenotazione`: `id`, `dataCreation` (`@CreationTimestamp`), `utente` (`@ManyToOne(LAZY)`), `stanza` (`@ManyToOne(LAZY)`), `dataI` (`LocalDateTime`), `dataF` (`LocalDateTime`).
+- **`exception/`**:
+  - `ResourceNotFoundException` (`404 Not Found`), `ResourceConflictException` (`409 Conflict`), `BadRequestException` (`400 Bad Request`).
+  - `GlobalExceptionHandler` (`@RestControllerAdvice`): mappa centralmente le eccezioni di dominio, i vincoli DB (`DataIntegrityViolationException`) e gli errori di validazione (`MethodArgumentNotValidException`) in risposte JSON strutturate.
 - **`dto/`**:
   - `UtenteDTO`: validazione `@NotBlank` / `@Email`; campo `password` annotato con `@JsonProperty(access = WRITE_ONLY)` per non esporlo mai nelle risposte JSON.
   - `StanzaDTO`: `id`, `nome` (`@NotBlank`).
   - `PrenotazioneRequestDTO`: `idUtente`, `idStanza`, `dataI`, `dataF` (tutti `@NotNull`).
   - `PrenotazioneResponseDTO`: `id`, `dataCreation`, `UtenteDTO`, `StanzaDTO`, `dataI`, `dataF`.
 - **`repository/`**:
-  - `UtenteRepo`, `StanzaRepo`: repository JPA standard.
+  - `UtenteRepo`: include check `existsByEmailIgnoreCase` / `existsByEmailIgnoreCaseAndIdNot`.
+  - `StanzaRepo`: include check `existsByNomeIgnoreCase` / `existsByNomeIgnoreCaseAndIdNot`.
   - `PrenotazioneRepo`:
-    - `findAll()`, `findById(Long id)`, `findByMonth(int month)` con `@EntityGraph(attributePaths = {"utente", "stanza"})` per evitare query N+1 e `LazyInitializationException`.
+    - `findAll()`, `findById(Long id)`, `findByMonth(int month)`, `findByYearAndMonth(int year, int month)` con `@EntityGraph(attributePaths = {"utente", "stanza"})` per evitare query N+1 e `LazyInitializationException`.
     - `isStanzaOccupied(stanzaId, startDate, endDate, excludeId)`: verifica sovrapposizioni con `p.dataI < :endDate AND p.dataF > :startDate` (consente prenotazioni adiacenti, es. `09:00-10:00` e `10:00-11:00`).
 - **`service/`** (`UtenteDAO`, `StanzaDAO`, `PrenotazioneDAO`):
   - Tutti i metodi di scrittura sono `@Transactional`, quelli di lettura `@Transactional(readOnly = true)`.
-  - `UtenteDAO`: effettua l'hashing della password con `PasswordEncoder` in `save` e `update`.
-  - `PrenotazioneDAO`: valida che `dataI` sia strettamente antecedente a `dataF` (`validateDates`) e verifica che la stanza sia libera tramite `isStanzaOccupied`.
+  - `UtenteDAO`: verifica unicità email (`ResourceConflictException`) ed effettua l'hashing della password con `PasswordEncoder` in `save` e `update`.
+  - `StanzaDAO`: verifica unicità nome stanza (`ResourceConflictException`) in `save` e `update`.
+  - `PrenotazioneDAO`: valida che `dataI` sia strettamente antecedente a `dataF` (`BadRequestException`), verifica l'esistenza di utente/stanza (`ResourceNotFoundException`) e che la stanza sia libera (`ResourceConflictException`).
 - **`controller/`**:
   - `UtenteCtrl` (`/api/utenti`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
   - `StanzaCtrl` (`/api/stanze`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
-  - `PrenotazioneCtrl` (`/api/prenotazioni`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `GET /timeline/{mese}`.
+  - `PrenotazioneCtrl` (`/api/prenotazioni`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `GET /timeline/{mese}`, `GET /timeline/{anno}/{mese}`.
 
 ---
 
@@ -59,18 +64,19 @@ Package base: `it.roombooking.booking` (`src/main/java/it/roombooking/booking/`)
 2. **Sicurezza e Password**:
    - Abilitato `.httpBasic(Customizer.withDefaults())` e `BCryptPasswordEncoder` in `WebSecConfig`.
    - Cifratura password utenti in `UtenteDAO` e oscuramento in output tramite `@JsonProperty(access = WRITE_ONLY)` in `UtenteDTO`.
-3. **Logica Prenotazioni**:
-   - Aggiunta validazione `dataI.isBefore(dataF)` in `PrenotazioneDAO`.
+3. **Logica Prenotazioni e Timeline**:
+   - Aggiunta validazione `dataI.isBefore(dataF)` e validazione mese (`1..12`) in `PrenotazioneDAO`.
    - Corretta query di overlap in `PrenotazioneRepo` (`<` e `>` anziché `<=` e `>=`) per permettere slot consecutivi.
-4. **Performance JPA e Transazioni**:
+   - Aggiunto endpoint `GET /api/prenotazioni/timeline/{anno}/{mese}`.
+4. **Gestione Eccezioni e Vincoli di Unicità**:
+   - Introdotto `GlobalExceptionHandler` (`@RestControllerAdvice`) con eccezioni dedicate (`404`, `409`, `400`).
+   - Aggiunti vincoli di unicità e controlli preventivi su `Utente.email` e `Stanza.nome`.
+5. **Performance JPA e Transazioni**:
    - Aggiunti `@EntityGraph` su `PrenotazioneRepo` e `@Transactional` su tutti i service (`UtenteDAO`, `StanzaDAO`, `PrenotazioneDAO`).
-5. **Test**:
-   - Aggiunti test di integrazione in `BookingApplicationTests` (autenticazione Basic, protezione password JSON + BCrypt, validazione date e slot adiacenti/sovrapposti).
+6. **Test**:
+   - Aggiunti test di integrazione in `BookingApplicationTests` (autenticazione Basic, protezione password JSON + BCrypt, validazione date e slot adiacenti/sovrapposti, vincoli di unicità `409`, errori `404`/`400`, timeline per anno e mese).
 
 ---
 
 ## 4. Possibili Evoluzioni Future (Backlog)
-- Gestione centralizzata delle eccezioni con `@RestControllerAdvice` e codici HTTP dedicati (es. `404 Not Found` per utente/stanza inesistenti, `409 Conflict` per stanza occupata, `400 Bad Request` per errori di validazione).
 - Autenticazione basata sugli utenti salvati a database (`UserDetailsService` custom su `UtenteRepo` con ruoli) o JWT/OAuth2.
-- Filtro timeline per anno oltre che per mese (`/api/prenotazioni/timeline/{anno}/{mese}`).
-- Vincolo di unicità su `Utente.email` e `Stanza.nome`.

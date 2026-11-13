@@ -9,6 +9,7 @@ public class Stanza implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String nome;
 
     public Stanza() {}

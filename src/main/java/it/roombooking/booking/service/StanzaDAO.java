@@ -1,6 +1,7 @@
 package it.roombooking.booking.service;
 
 import it.roombooking.booking.dto.StanzaDTO;
+import it.roombooking.booking.exception.ResourceConflictException;
 import it.roombooking.booking.model.Stanza;
 import it.roombooking.booking.repository.StanzaRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,9 @@ public class StanzaDAO {
 
     @Transactional
     public StanzaDTO save(StanzaDTO dto) {
+        if (stanzaRepo.existsByNomeIgnoreCase(dto.getNome())) {
+            throw new ResourceConflictException("Esiste già una stanza con nome: " + dto.getNome());
+        }
         Stanza room = new Stanza();
         room.setNome(dto.getNome());
         return mapToDTO(stanzaRepo.save(room));
@@ -38,6 +42,9 @@ public class StanzaDAO {
     @Transactional
     public StanzaDTO update(Long id, StanzaDTO dto) {
         return stanzaRepo.findById(id).map(room -> {
+            if (stanzaRepo.existsByNomeIgnoreCaseAndIdNot(dto.getNome(), id)) {
+                throw new ResourceConflictException("Esiste già una stanza con nome: " + dto.getNome());
+            }
             room.setNome(dto.getNome());
             return mapToDTO(stanzaRepo.save(room));
         }).orElse(null);

@@ -1,6 +1,7 @@
 package it.roombooking.booking.service;
 
 import it.roombooking.booking.dto.UtenteDTO;
+import it.roombooking.booking.exception.ResourceConflictException;
 import it.roombooking.booking.model.Utente;
 import it.roombooking.booking.repository.UtenteRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class UtenteDAO {
 
     @Transactional
     public UtenteDTO save(UtenteDTO utenteDTO) {
+        if (utenteRepo.existsByEmailIgnoreCase(utenteDTO.getEmail())) {
+            throw new ResourceConflictException("Email già in uso: " + utenteDTO.getEmail());
+        }
         Utente utente = new Utente();
         utente.setName(utenteDTO.getName());
         utente.setEmail(utenteDTO.getEmail());
@@ -46,6 +50,9 @@ public class UtenteDAO {
     @Transactional
     public UtenteDTO update(Long id, UtenteDTO utenteDTO) {
         return utenteRepo.findById(id).map(utente -> {
+            if (utenteRepo.existsByEmailIgnoreCaseAndIdNot(utenteDTO.getEmail(), id)) {
+                throw new ResourceConflictException("Email già in uso: " + utenteDTO.getEmail());
+            }
             utente.setName(utenteDTO.getName());
             utente.setEmail(utenteDTO.getEmail());
             utente.setPassword(passwordEncoder.encode(utenteDTO.getPassword()));

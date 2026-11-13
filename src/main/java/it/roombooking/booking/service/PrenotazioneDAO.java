@@ -2,6 +2,9 @@ package it.roombooking.booking.service;
 
 import it.roombooking.booking.dto.PrenotazioneRequestDTO;
 import it.roombooking.booking.dto.PrenotazioneResponseDTO;
+import it.roombooking.booking.exception.BadRequestException;
+import it.roombooking.booking.exception.ResourceConflictException;
+import it.roombooking.booking.exception.ResourceNotFoundException;
 import it.roombooking.booking.model.Prenotazione;
 import it.roombooking.booking.model.Stanza;
 import it.roombooking.booking.model.Utente;
@@ -38,14 +41,14 @@ public class PrenotazioneDAO {
     public PrenotazioneResponseDTO save(PrenotazioneRequestDTO dto) {
         validateDates(dto.getDataI(), dto.getDataF());
 
-        if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), 0L)) {
-            throw new RuntimeException("La stanza è già occupata in questo periodo");
-        }
-
         Utente utente = utenteRepo.findById(dto.getIdUtente())
-                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
         Stanza stanza = stanzaRepo.findById(dto.getIdStanza())
-                .orElseThrow(() -> new RuntimeException("Stanza non trovata"));
+                .orElseThrow(() -> new ResourceNotFoundException("Stanza non trovata"));
+
+        if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), 0L)) {
+            throw new ResourceConflictException("La stanza è già occupata in questo periodo");
+        }
 
         Prenotazione prenotazione = new Prenotazione();
         prenotazione.setUtente(utente);
@@ -72,15 +75,15 @@ public class PrenotazioneDAO {
     public PrenotazioneResponseDTO update(Long id, PrenotazioneRequestDTO dto) {
         validateDates(dto.getDataI(), dto.getDataF());
 
-        if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), id)) {
-            throw new RuntimeException("La stanza è già occupata in questo periodo");
-        }
-
         return prenotazioneRepo.findById(id).map(prenotazione -> {
             Utente utente = utenteRepo.findById(dto.getIdUtente())
-                    .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato"));
             Stanza stanza = stanzaRepo.findById(dto.getIdStanza())
-                    .orElseThrow(() -> new RuntimeException("Stanza non trovata"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Stanza non trovata"));
+
+            if (prenotazioneRepo.isStanzaOccupied(dto.getIdStanza(), dto.getDataI(), dto.getDataF(), id)) {
+                throw new ResourceConflictException("La stanza è già occupata in questo periodo");
+            }
 
             prenotazione.setUtente(utente);
             prenotazione.setStanza(stanza);
@@ -101,14 +104,29 @@ public class PrenotazioneDAO {
 
     @Transactional(readOnly = true)
     public List<PrenotazioneResponseDTO> findByMonth(int mese) {
+        validateMonth(mese);
         return prenotazioneRepo.findByMonth(mese).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PrenotazioneResponseDTO> findByYearAndMonth(int anno, int mese) {
+        validateMonth(mese);
+        return prenotazioneRepo.findByYearAndMonth(anno, mese).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     private void validateDates(LocalDateTime dataI, LocalDateTime dataF) {
         if (dataI == null || dataF == null || !dataI.isBefore(dataF)) {
-            throw new RuntimeException("La data di inizio deve essere antecedente alla data di fine");
+            throw new BadRequestException("La data di inizio deve essere antecedente alla data di fine");
+        }
+    }
+
+    private void validateMonth(int mese) {
+        if (mese < 1 || mese > 12) {
+            throw new BadRequestException("Il mese deve essere compreso tra 1 e 12");
         }
     }
 
