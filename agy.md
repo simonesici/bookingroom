@@ -2,6 +2,8 @@
 
 Documento di contesto per riprendere rapidamente lo sviluppo del progetto **bookingroom** in nuove sessioni.
 
+> **REGOLA DI MANUTENZIONE DOCUMENTAZIONE**: Ad ogni modifica funzionale, architetturale o sugli endpoint del progetto, **aggiorna sempre sia `README.md` (per la visualizzazione su GitHub) sia questo file `agy.md`**.
+
 ---
 
 ## 1. Panoramica e Stack Tecnologico
