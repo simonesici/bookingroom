@@ -30,6 +30,7 @@ public class UtenteDAO {
         utente.setName(utenteDTO.getName());
         utente.setEmail(utenteDTO.getEmail());
         utente.setPassword(passwordEncoder.encode(utenteDTO.getPassword()));
+        utente.setRole(normalizeRole(utenteDTO.getRole()));
 
         Utente saved = utenteRepo.save(utente);
         return mapToDTO(saved);
@@ -56,6 +57,9 @@ public class UtenteDAO {
             utente.setName(utenteDTO.getName());
             utente.setEmail(utenteDTO.getEmail());
             utente.setPassword(passwordEncoder.encode(utenteDTO.getPassword()));
+            if (utenteDTO.getRole() != null && !utenteDTO.getRole().isBlank()) {
+                utente.setRole(normalizeRole(utenteDTO.getRole()));
+            }
             return mapToDTO(utenteRepo.save(utente));
         }).orElse(null);
     }
@@ -74,6 +78,15 @@ public class UtenteDAO {
         dto.setId(utente.getId());
         dto.setName(utente.getName());
         dto.setEmail(utente.getEmail());
+        dto.setRole(utente.getRole());
         return dto;
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
+            return "USER";
+        }
+        String cleaned = role.trim().toUpperCase();
+        return cleaned.startsWith("ROLE_") ? cleaned.substring(5) : cleaned;
     }
 }

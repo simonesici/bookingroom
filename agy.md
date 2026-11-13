@@ -13,8 +13,8 @@ Applicazione backend REST per la gestione di prenotazioni di stanze/sale riunion
   - Runtime/Sviluppo: **PostgreSQL** (`jdbc:postgresql://localhost:5432/booking_db`, utente/password: `postgres`/`postgres`)
   - Test: **H2** in-memory (`jdbc:h2:mem:testdb`)
 - **ORM**: Spring Data JPA / Hibernate (`ddl-auto=update` in dev, `create-drop` in test)
-- **Sicurezza**: Spring Security (HTTP Basic + `BCryptPasswordEncoder`)
-- **Documentazione API**: SpringDoc OpenAPI `2.5.0` (`/swagger-ui/index.html`, `/v3/api-docs`)
+- **Sicurezza**: Spring Security Stateless (JWT Bearer HS256 + HTTP Basic + `BCryptPasswordEncoder` + `CustomUserDetailsService` su DB)
+- **Documentazione API**: SpringDoc OpenAPI `2.5.0` (`/swagger-ui/index.html`, `/v3/api-docs`) con schema `bearerAuth` (JWT)
 - **Containerizzazione**: `Dockerfile` multi-stage (Java 21) e `docker-compose.yml` (PostgreSQL 16 + App).
 - **Timezone**: `Europe/Rome` impostata di default all'avvio in `BookingApplication`.
 
@@ -24,14 +24,19 @@ Applicazione backend REST per la gestione di prenotazioni di stanze/sale riunion
 Package base: `it.roombooking.booking` (`src/main/java/it/roombooking/booking/`)
 
 - **`BookingApplication.java`**: Entry point Spring Boot con `@EnableJpaAuditing` e timezone `Europe/Rome`.
-- **`config/WebSecConfig.java`**: Configurazione Spring Security:
-  - CSRF disabilitato per utilizzo REST API.
-  - Swagger UI pubblico.
-  - `POST /api/utenti` protetto da autenticazione **HTTP Basic** (credenziali da `application.properties`: `admin` / `admin`).
-  - Tutti gli altri endpoint attualmente pubblici (`permitAll()`).
-  - Bean `PasswordEncoder` (`BCryptPasswordEncoder`) e `UserDetailsService` (`InMemoryUserDetailsManager`).
+- **`config/`**:
+  - `WebSecConfig.java`: Configurazione Spring Security Stateless:
+    - CSRF disabilitato e sessioni `STATELESS`.
+    - Pubblici (`permitAll()`): Swagger UI, `POST /api/auth/login`, `GET /api/stanze/**`, `GET /api/prenotazioni/**`.
+    - Protetti (`authenticated()`): tutte le operazioni di scrittura (`POST`, `PUT`, `DELETE`), `GET /api/utenti/**` e `GET /api/auth/me`.
+    - Supporta autenticazione **JWT Bearer** (`JwtAuthenticationFilter`) e **HTTP Basic**.
+  - `OpenApiConfig.java`: configura il pulsante **Authorize** (`bearerAuth` JWT) su Swagger UI.
+- **`security/`**:
+  - `JwtService.java`: generazione e validazione token JWT `HS256` (RFC 7519).
+  - `JwtAuthenticationFilter.java`: filtro `OncePerRequestFilter` per header `Authorization: Bearer <token>`.
+  - `CustomUserDetailsService.java`: carica gli utenti salvati a database (`UtenteRepo` per email o nome) con fallback sull'admin di bootstrap (`application.properties`).
 - **`model/`**:
-  - `Utente`: `id`, `name`, `email` (`unique = true`), `password` (hash BCrypt).
+  - `Utente`: `id`, `name`, `email` (`unique = true`), `password` (hash BCrypt), `role` (`USER` / `ADMIN`).
   - `Stanza`: `id`, `nome` (`unique = true`), `capienza` (`Integer`), `descrizione` (`String`).
   - `Prenotazione`: `id`, `dataCreation` (`@CreationTimestamp`), `utente` (`@ManyToOne(LAZY)`), `stanza` (`@ManyToOne(LAZY)`), `dataI` (`LocalDateTime`), `dataF` (`LocalDateTime`).
 - **`exception/`**:
@@ -54,6 +59,7 @@ Package base: `it.roombooking.booking` (`src/main/java/it/roombooking/booking/`)
   - `StanzaDAO`: verifica unicità nome stanza (`ResourceConflictException`), gestisce capienza/descrizione, filtro per capienza minima e ricerca stanze disponibili (`findAvailableRooms`).
   - `PrenotazioneDAO`: valida che `dataI` sia strettamente antecedente a `dataF` (`BadRequestException`), verifica l'esistenza di utente/stanza (`ResourceNotFoundException`), che la stanza sia libera (`ResourceConflictException`) e filtra per mese, anno/mese, stanza o utente.
 - **`controller/`**:
+  - `AuthCtrl` (`/api/auth`): `POST /login` (restituisce token JWT Bearer), `GET /me` (profilo utente autenticato).
   - `UtenteCtrl` (`/api/utenti`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
   - `StanzaCtrl` (`/api/stanze`): `POST`, `GET` (con `?capienzaMinima=`), `GET /disponibili` (`?dataI=&dataF=&capienzaMinima=`), `GET /{id}`, `PUT /{id}`, `DELETE /{id}`.
   - `PrenotazioneCtrl` (`/api/prenotazioni`): `POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `GET /timeline/{mese}`, `GET /timeline/{anno}/{mese}`, `GET /stanza/{stanzaId}`, `GET /utente/{utenteId}`.

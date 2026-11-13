@@ -18,6 +18,8 @@ public class UtenteDTO {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    private String role;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -49,5 +51,13 @@ public class UtenteDTO {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

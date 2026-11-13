@@ -152,11 +152,13 @@ public class BookingApplicationTests {
 		// 2. Create unique room and verify duplicate name returns 409 Conflict
 		String roomPayload = "{\"nome\":\"Sala Plenaria\"}";
 		mockMvc.perform(post("/api/stanze")
+				.header(HttpHeaders.AUTHORIZATION, basicAuth)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(roomPayload))
 				.andExpect(status().isOk());
 
 		mockMvc.perform(post("/api/stanze")
+				.header(HttpHeaders.AUTHORIZATION, basicAuth)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(roomPayload))
 				.andExpect(status().isConflict())
@@ -164,6 +166,7 @@ public class BookingApplicationTests {
 
 		// 3. Booking with nonexistent user -> 404 Not Found
 		mockMvc.perform(post("/api/prenotazioni")
+				.header(HttpHeaders.AUTHORIZATION, basicAuth)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"idUtente\":99999,\"idStanza\":1,\"dataI\":\"2027-06-15T09:00:00\",\"dataF\":\"2027-06-15T10:00:00\"}"))
 				.andExpect(status().isNotFound())
@@ -271,5 +274,60 @@ public class BookingApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
 				.andExpect(jsonPath("$[0].utente.email").value("giulia@example.com"));
+	}
+
+	@Test
+	public void testJwtLoginDatabaseUserAndProtectedEndpoints() throws Exception {
+		UtenteDTO u = new UtenteDTO();
+		u.setName("Marco");
+		u.setEmail("marco@example.com");
+		u.setPassword("PasswordSegreta!");
+		u.setRole("USER");
+		utenteDAO.save(u);
+
+		// Unauthenticated POST on /api/stanze -> 401 Unauthorized
+		mockMvc.perform(post("/api/stanze")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"nome\":\"Sala Protetta\"}"))
+				.andExpect(status().isUnauthorized());
+
+		// Wrong password -> 401 Unauthorized
+		mockMvc.perform(post("/api/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"marco@example.com\",\"password\":\"Errata\"}"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.status").value(401));
+
+		// Valid login with database user -> 200 OK + JWT token
+		String loginResponse = mockMvc.perform(post("/api/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"marco@example.com\",\"password\":\"PasswordSegreta!\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.token").isNotEmpty())
+				.andExpect(jsonPath("$.tokenType").value("Bearer"))
+				.andExpect(jsonPath("$.username").value("marco@example.com"))
+				.andExpect(jsonPath("$.role").value("ROLE_USER"))
+				.andReturn()
+				.getResponse()
+				.getContentAsString();
+
+		String token = com.jayway.jsonpath.JsonPath.read(loginResponse, "$.token");
+		String bearerHeader = "Bearer " + token;
+
+		// GET /api/auth/me with JWT Bearer token -> 200 OK
+		mockMvc.perform(get("/api/auth/me")
+				.header(HttpHeaders.AUTHORIZATION, bearerHeader))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.email").value("marco@example.com"))
+				.andExpect(jsonPath("$.name").value("Marco"))
+				.andExpect(jsonPath("$.role").value("USER"));
+
+		// Protected POST /api/stanze with JWT Bearer token -> 200 OK
+		mockMvc.perform(post("/api/stanze")
+				.header(HttpHeaders.AUTHORIZATION, bearerHeader)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"nome\":\"Sala Protetta\",\"capienza\":8}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.nome").value("Sala Protetta"));
 	}
 }
